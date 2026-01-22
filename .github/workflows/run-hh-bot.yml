@@ -2,8 +2,8 @@ name: Run HH.ru Auto-Responder
 
 on:
   workflow_dispatch:  # Ручной запуск
-  schedule:
-    - cron: '0 8 * * 1'  # Каждый понедельник в 8 утра
+#  schedule:
+#    - cron: '0 8 * * 1'  # Каждый понедельник в 8 утра
 
 jobs:
   run-script:
