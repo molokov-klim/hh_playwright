@@ -1,0 +1,48 @@
+name: Run HH.ru Auto-Responder
+
+on:
+  workflow_dispatch:  # Ручной запуск
+  schedule:
+    - cron: '0 8 * * 1'  # Каждый понедельник в 8 утра
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: latest
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        uv pip install -r requirements.txt
+
+    - name: Install Playwright browsers
+      run: |
+        uv run playwright install chromium
+
+    - name: Run script
+      run: |
+        uv run python hh_auto_responder.py
+      env:
+        HH_LOGIN: ${{ secrets.HH_LOGIN }}
+        HH_PASSWORD: ${{ secrets.HH_PASSWORD }}
+
+    - name: Upload screenshots and logs as artifacts
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: error-artifacts
+        path: |
+          *.png
+          *.log
