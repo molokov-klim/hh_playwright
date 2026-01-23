@@ -30,8 +30,8 @@ async def main():
         sys.exit(1)
     
     # Получение опций браузера и контекста
-    browser_options = get_browser_options(config)
-    context_options = get_browser_context_options(config)
+    browser_options = get_browser_options(config.HEADLESS)
+    context_options = get_browser_context_options(config.VIEWPORT_WIDTH, config.VIEWPORT_HEIGHT, config.USER_AGENT)
     
     async with async_playwright() as p:
         try:

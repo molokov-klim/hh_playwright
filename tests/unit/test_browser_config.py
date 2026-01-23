@@ -13,55 +13,50 @@ class TestBrowserConfig:
     def test_get_browser_options_headless_true(self):
         """Тест получения опций браузера с headless=True"""
         # Подготовка
-        config = Mock(spec=Config)
-        config.HEADLESS = True
-        
+        headless = True
+
         # Выполнение
-        options = get_browser_options(config)
-        
+        options = get_browser_options(headless)
+
         # Проверка
         assert options["headless"] is True
 
     def test_get_browser_options_headless_false(self):
         """Тест получения опций браузера с headless=False"""
         # Подготовка
-        config = Mock(spec=Config)
-        config.HEADLESS = False
-        
+        headless = False
+
         # Выполнение
-        options = get_browser_options(config)
-        
+        options = get_browser_options(headless)
+
         # Проверка
         assert options["headless"] is False
 
     def test_get_browser_context_options_with_config_values(self):
         """Тест получения опций контекста браузера с значениями из конфига"""
         # Подготовка
-        config = Mock(spec=Config)
-        config.VIEWPORT_WIDTH = 1280
-        config.VIEWPORT_HEIGHT = 720
-        config.USER_AGENT = "Custom User Agent"
-        config.TIMEOUT = 45000
-        
+        viewport_width = 1280
+        viewport_height = 720
+        user_agent = "Custom User Agent"
+
         # Выполнение
-        context_options = get_browser_context_options(config)
-        
+        context_options = get_browser_context_options(viewport_width, viewport_height, user_agent)
+
         # Проверка
         assert context_options["viewport"]["width"] == 1280
         assert context_options["viewport"]["height"] == 720
         assert context_options["user_agent"] == "Custom User Agent"
-        assert context_options["timeout"] == 45000
 
     def test_get_browser_context_options_default_viewport(self):
         """Тест получения опций контекста браузера с вьюпортом по умолчанию"""
         # Подготовка
-        config = Mock(spec=Config)
-        config.VIEWPORT_WIDTH = 1920
-        config.VIEWPORT_HEIGHT = 1080
-        
+        viewport_width = 1920
+        viewport_height = 1080
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
         # Выполнение
-        context_options = get_browser_context_options(config)
-        
+        context_options = get_browser_context_options(viewport_width, viewport_height, user_agent)
+
         # Проверка
         assert context_options["viewport"]["width"] == 1920
         assert context_options["viewport"]["height"] == 1080
@@ -69,15 +64,13 @@ class TestBrowserConfig:
     def test_get_browser_context_options_extra_options(self):
         """Тест наличия дополнительных опций контекста для обхода анти-бот защиты"""
         # Подготовка
-        config = Mock(spec=Config)
-        config.VIEWPORT_WIDTH = 1920
-        config.VIEWPORT_HEIGHT = 1080
-        config.USER_AGENT = "Test Agent"
-        config.TIMEOUT = 30000
-        
+        viewport_width = 1920
+        viewport_height = 1080
+        user_agent = "Test Agent"
+
         # Выполнение
-        context_options = get_browser_context_options(config)
-        
+        context_options = get_browser_context_options(viewport_width, viewport_height, user_agent)
+
         # Проверка
         # Проверяем наличие опций, которые помогают обойти анти-бот защиты
         assert "java_script_enabled" in context_options
