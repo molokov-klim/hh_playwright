@@ -1,7 +1,8 @@
 """
-Тесты для модуля навигации по hh.ru
+Тесты для модуля навигации по hh.ru (устаревший)
 """
 import pytest
+import warnings
 from unittest.mock import AsyncMock, Mock, patch
 import sys
 from pathlib import Path
@@ -13,7 +14,7 @@ from src.navigation import HHNavigation
 
 
 class TestHHNavigation:
-    """Тесты для класса HHNavigation"""
+    """Тесты для класса HHNavigation (устаревший)"""
 
     @pytest.fixture
     def mock_config(self):
@@ -44,71 +45,115 @@ class TestHHNavigation:
 
     def test_init_creates_correct_instance(self, mock_config, mock_logger):
         """Тест инициализации класса HHNavigation"""
-        # Выполнение
-        nav = HHNavigation(mock_config, mock_logger)
+        # Проверяем, что генерируется предупреждение об устаревании
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # Выполнение
+            nav = HHNavigation(mock_config, mock_logger)
 
-        # Проверка
-        assert nav.config == mock_config
-        assert nav.logger == mock_logger
-
-    @pytest.mark.asyncio
-    async def test_navigate_to_my_resumes(self, mock_config, mock_page, mock_logger):
-        """Тест перехода на страницу 'Мои резюме'"""
-        # Подготовка
-        nav = HHNavigation(mock_config, mock_logger)
-
-        # Выполнение
-        await nav.navigate_to_my_resumes(mock_page)
-
-        # Проверка
-        mock_page.goto.assert_called_once_with("https://hh.ru/applicant/resumes")
+            # Проверка
+            assert nav.config == mock_config
+            assert nav.logger == mock_logger
+            # Проверяем, что было сгенерировано предупреждение
+            assert len(w) >= 1
+            assert issubclass(w[-1].category, DeprecationWarning)
 
     @pytest.mark.asyncio
-    async def test_select_resume_by_id(self, mock_config, mock_page, mock_logger):
-        """Тест выбора резюме по ID"""
-        # Подготовка
-        nav = HHNavigation(mock_config, mock_logger)
-        resume_id = "123456"
+    async def test_navigate_to_my_resumes_uses_new_handler(self, mock_config, mock_page, mock_logger):
+        """Тест перехода на страницу 'Мои резюме' через новый обработчик"""
+        # Проверяем, что генерируется предупреждение об устаревании
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # Подготовка
+            nav = HHNavigation(mock_config, mock_logger)
 
-        # Выполнение
-        await nav.select_resume(mock_page, resume_id)
+            # Проверяем, что было сгенерировано предупреждение
+            assert len(w) >= 1
+            assert issubclass(w[-1].category, DeprecationWarning)
 
-        # Проверка
-        mock_page.click.assert_called_once_with(f"[data-qa='resume-list-item-{resume_id}']")
+        # Мок для нового обработчика
+        with patch('src.navigation.ResumeHandler') as mock_resume_handler_class:
+            mock_resume_handler = Mock()
+            mock_resume_handler.navigate_to_my_resumes = AsyncMock()
+            mock_resume_handler_class.return_value = mock_resume_handler
 
-    @pytest.mark.asyncio
-    async def test_select_first_resume(self, mock_config, mock_page, mock_logger):
-        """Тест выбора первого резюме"""
-        # Подготовка
-        nav = HHNavigation(mock_config, mock_logger)
+            # Выполнение
+            await nav.navigate_to_my_resumes(mock_page)
 
-        # Выполнение
-        await nav.select_first_resume(mock_page)
-
-        # Проверка
-        mock_page.click.assert_called_once_with("[data-qa='resume-list-item']:first-child")
-
-    @pytest.mark.asyncio
-    async def test_go_to_recommended_vacancies_with_resume_id(self, mock_config, mock_page, mock_logger):
-        """Тест перехода к рекомендуемым вакансиям с указанием ID резюме"""
-        # Подготовка
-        nav = HHNavigation(mock_config, mock_logger)
-        resume_id = "123456"
-
-        # Выполнение
-        await nav.go_to_recommended_vacancies(mock_page, resume_id)
-
-        # Проверка
-        mock_page.click.assert_called_once_with("[data-qa='recommended-vacancies-tab']")
+            # Проверка, что был вызван новый обработчик
+            mock_resume_handler.navigate_to_my_resumes.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_wait_for_vacancies_loaded(self, mock_config, mock_page, mock_logger):
-        """Тест ожидания загрузки вакансий"""
-        # Подготовка
-        nav = HHNavigation(mock_config, mock_logger)
+    async def test_select_first_resume_uses_new_handler(self, mock_config, mock_page, mock_logger):
+        """Тест выбора первого резюме через новый обработчик"""
+        # Проверяем, что генерируется предупреждение об устаревании
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # Подготовка
+            nav = HHNavigation(mock_config, mock_logger)
 
-        # Выполнение
-        await nav.wait_for_vacancies_loaded(mock_page)
+            # Проверяем, что было сгенерировано предупреждение
+            assert len(w) >= 1
+            assert issubclass(w[-1].category, DeprecationWarning)
 
-        # Проверка
-        mock_page.wait_for_selector.assert_called_once_with("[data-qa='vacancy']", timeout=mock_config.TIMEOUT)
+        # Мок для нового обработчика
+        with patch('src.navigation.ResumeHandler') as mock_resume_handler_class:
+            mock_resume_handler = Mock()
+            mock_resume_handler.select_first_resume = AsyncMock()
+            mock_resume_handler_class.return_value = mock_resume_handler
+
+            # Выполнение
+            await nav.select_first_resume(mock_page)
+
+            # Проверка, что был вызван новый обработчик
+            mock_resume_handler.select_first_resume.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_go_to_recommended_vacancies_uses_new_handler(self, mock_config, mock_page, mock_logger):
+        """Тест перехода к рекомендуемым вакансиям через новый обработчик"""
+        # Проверяем, что генерируется предупреждение об устаревании
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # Подготовка
+            nav = HHNavigation(mock_config, mock_logger)
+
+            # Проверяем, что было сгенерировано предупреждение
+            assert len(w) >= 1
+            assert issubclass(w[-1].category, DeprecationWarning)
+
+        # Мок для нового обработчика
+        with patch('src.navigation.ResumeHandler') as mock_resume_handler_class:
+            mock_resume_handler = Mock()
+            mock_resume_handler.go_to_recommended_vacancies = AsyncMock()
+            mock_resume_handler_class.return_value = mock_resume_handler
+
+            # Выполнение
+            await nav.go_to_recommended_vacancies(mock_page, "resume123")
+
+            # Проверка, что был вызван новый обработчик
+            mock_resume_handler.go_to_recommended_vacancies.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_wait_for_vacancies_loaded_uses_new_handler(self, mock_config, mock_page, mock_logger):
+        """Тест ожидания загрузки вакансий через новый обработчик"""
+        # Проверяем, что генерируется предупреждение об устаревании
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # Подготовка
+            nav = HHNavigation(mock_config, mock_logger)
+
+            # Проверяем, что было сгенерировано предупреждение
+            assert len(w) >= 1
+            assert issubclass(w[-1].category, DeprecationWarning)
+
+        # Мок для нового обработчика
+        with patch('src.navigation.ResumeHandler') as mock_resume_handler_class:
+            mock_resume_handler = Mock()
+            mock_resume_handler.wait_for_vacancies_loaded = AsyncMock()
+            mock_resume_handler_class.return_value = mock_resume_handler
+
+            # Выполнение
+            await nav.wait_for_vacancies_loaded(mock_page)
+
+            # Проверка, что был вызван новый обработчик
+            mock_resume_handler.wait_for_vacancies_loaded.assert_called_once()

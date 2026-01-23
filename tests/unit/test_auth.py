@@ -1,7 +1,8 @@
 """
-Тесты для модуля авторизации на hh.ru
+Тесты для модуля авторизации на hh.ru (устаревший)
 """
 import pytest
+import warnings
 from unittest.mock import AsyncMock, Mock, patch, MagicMock
 import asyncio
 
@@ -12,7 +13,7 @@ pytest_plugins = ["pytest_asyncio"]
 
 
 class TestHHAuth:
-    """Тесты для класса HHAuth"""
+    """Тесты для класса HHAuth (устаревший)"""
 
     @pytest.fixture
     def mock_config(self):
@@ -45,96 +46,67 @@ class TestHHAuth:
 
     def test_init_creates_correct_instance(self, mock_config, mock_logger):
         """Тест инициализации класса HHAuth"""
-        # Выполнение
-        auth = HHAuth(mock_config, mock_logger)
+        # Проверяем, что генерируется предупреждение об устаревании
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # Выполнение
+            auth = HHAuth(mock_config, mock_logger)
 
-        # Проверка
-        assert auth.config == mock_config
-        assert auth.logger == mock_logger
+            # Проверка
+            assert auth.config == mock_config
+            assert auth.logger == mock_logger
+            # Проверяем, что было сгенерировано предупреждение
+            assert len(w) >= 1
+            assert issubclass(w[-1].category, DeprecationWarning)
 
     @pytest.mark.asyncio
     async def test_perform_auth_success(self, mock_config, mock_page, mock_logger):
         """Тест успешной авторизации"""
-        # Подготовка
-        auth = HHAuth(mock_config, mock_logger)
-        
+        # Проверяем, что генерируется предупреждение об устаревании
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # Подготовка
+            auth = HHAuth(mock_config, mock_logger)
+
+            # Проверяем, что было сгенерировано предупреждение
+            assert len(w) >= 1
+            assert issubclass(w[-1].category, DeprecationWarning)
+
         # Мок для проверки успешной авторизации
-        with patch.object(auth, '_check_auth_success', return_value=True):
+        with patch('src.auth.AuthHandler') as mock_auth_handler_class:
+            mock_auth_handler = Mock()
+            mock_auth_handler.perform_auth = AsyncMock(return_value=True)
+            mock_auth_handler_class.return_value = mock_auth_handler
+
             # Выполнение
             result = await auth.perform_auth(mock_page)
 
             # Проверка
             assert result is True
-            # Проверяем, что были вызваны нужные методы
-            mock_page.goto.assert_called_once()
-            mock_page.fill.assert_any_call("[data-qa='login-input']", "test@example.com")
-            mock_page.click.assert_called()
+            # Проверяем, что был вызван новый обработчик
+            mock_auth_handler.perform_auth.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_perform_auth_failure(self, mock_config, mock_page, mock_logger):
         """Тест неудачной авторизации"""
-        # Подготовка
-        auth = HHAuth(mock_config, mock_logger)
-        
+        # Проверяем, что генерируется предупреждение об устаревании
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # Подготовка
+            auth = HHAuth(mock_config, mock_logger)
+
+            # Проверяем, что было сгенерировано предупреждение
+            assert len(w) >= 1
+            assert issubclass(w[-1].category, DeprecationWarning)
+
         # Мок для проверки неудачной авторизации
-        with patch.object(auth, '_check_auth_success', return_value=False):
-            # Выполнение и проверка
-            with pytest.raises(Exception, match="Authentication failed"):
-                await auth.perform_auth(mock_page)
+        with patch('src.auth.AuthHandler') as mock_auth_handler_class:
+            mock_auth_handler = Mock()
+            mock_auth_handler.perform_auth = AsyncMock(return_value=False)
+            mock_auth_handler_class.return_value = mock_auth_handler
 
-    @pytest.mark.asyncio
-    async def test_fill_login_form(self, mock_config, mock_page, mock_logger):
-        """Тест заполнения формы логина"""
-        # Подготовка
-        auth = HHAuth(mock_config, mock_logger)
+            # Выполнение
+            result = await auth.perform_auth(mock_page)
 
-        # Выполнение
-        await auth._fill_login_form(mock_page)
-
-        # Проверка
-        mock_page.fill.assert_any_call("[data-qa='login-input']", "test@example.com")
-        mock_page.click.assert_called_with("[data-qa='login-button-next']")
-
-    @pytest.mark.asyncio
-    async def test_fill_password_form(self, mock_config, mock_page, mock_logger):
-        """Тест заполнения формы пароля"""
-        # Подготовка
-        auth = HHAuth(mock_config, mock_logger)
-
-        # Выполнение
-        await auth._fill_password_form(mock_page)
-
-        # Проверка
-        mock_page.fill.assert_any_call("[data-qa='password-input']", "password123")
-        mock_page.click.assert_called_with("[data-qa='login-button-submit']")
-
-    @pytest.mark.asyncio
-    async def test_check_auth_success_returns_true_when_logged_in(self, mock_config, mock_page, mock_logger):
-        """Тест проверки успешной авторизации - пользователь залогинен"""
-        # Подготовка
-        auth = HHAuth(mock_config, mock_logger)
-        
-        # Мок для проверки видимости элемента авторизованного пользователя
-        mock_page.locator.return_value.is_visible = AsyncMock(return_value=True)
-
-        # Выполнение
-        result = await auth._check_auth_success(mock_page)
-
-        # Проверка
-        assert result is True
-
-    @pytest.mark.asyncio
-    async def test_check_auth_success_returns_false_when_not_logged_in(self, mock_config, mock_page, mock_logger):
-        """Тест проверки успешной авторизации - пользователь не залогинен"""
-        # Подготовка
-        auth = HHAuth(mock_config, mock_logger)
-
-        # Мок для проверки отсутствия элемента авторизованного пользователя
-        # В данном случае, мы мокаем wait_for_selector, чтобы он выбросил исключение
-        mock_page.wait_for_selector = AsyncMock(side_effect=Exception("Timeout"))
-
-        # Выполнение
-        result = await auth._check_auth_success(mock_page)
-
-        # Проверка
-        assert result is False
+            # Проверка
+            assert result is False

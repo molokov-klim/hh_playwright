@@ -109,16 +109,41 @@ uv run python -m pytest -v
 
 ## Архитектура
 
-Проект состоит из следующих модулей:
+Проект следует архитектуре с тремя уровнями абстракции:
 
+1. **UI уровень (Page Objects)** - взаимодействие с элементами интерфейса
+2. **Бизнес-логика** - логика выполнения конкретных задач
+3. **Шаги/Сценарии** - высокоуровневые операции
+
+### UI уровень (Page Objects)
+- `src/pages/base_page.py` - базовый класс для всех страниц
+- `src/pages/auth_page.py` - страница авторизации
+- `src/pages/main_page.py` - главная страница
+- `src/pages/resume_page.py` - страница резюме
+- `src/pages/vacancy_page.py` - страница вакансий
+- `src/pages/application_page.py` - страница отправки откликов
+
+### Бизнес-логика
+- `src/business_logic/auth_handler.py` - обработчик авторизации
+- `src/business_logic/resume_handler.py` - обработчик резюме
+- `src/business_logic/vacancy_handler.py` - обработчик вакансий
+- `src/business_logic/application_handler.py` - обработчик откликов
+- `src/business_logic/session_manager.py` - менеджер сессии
+
+### Шаги/Сценарии
+- `src/steps/auth_steps.py` - шаги авторизации
+- `src/steps/resume_steps.py` - шаги работы с резюме
+- `src/steps/vacancy_steps.py` - шаги работы с вакансиями
+- `src/steps/application_steps.py` - шаги отправки откликов
+- `src/steps/main_workflow.py` - основной сценарий
+
+### Вспомогательные модули
 - `src/config.py` - управление конфигурацией и переменными окружения
 - `src/browser_config.py` - настройка опций браузера
-- `src/auth.py` - авторизация на hh.ru
-- `src/navigation.py` - навигация по сайту
-- `src/vacancy_processor.py` - обработка вакансий
-- `src/application_sender.py` - отправка откликов
 - `src/error_handler.py` - обработка ошибок
 - `src/logger.py` - логирование
+
+> **Примечание:** Старые модули (`src/auth.py`, `src/navigation.py`, `src/vacancy_processor.py`, `src/application_sender.py`) помечены как устаревшие, но по-прежнему работают, используя внутренне новую архитектуру.
 
 ## Безопасность
 
