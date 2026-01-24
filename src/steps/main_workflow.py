@@ -40,67 +40,29 @@ class MainWorkflow:
 
         try:
             # Проверяем наличие диалогового окна с регионом
-            # Используем более общие селекторы, которые могут работать с разными вариантами текста
-            region_dialog_selectors = [
-                "text=Ваш регион",
-                "text=регион",
-                ".HH-RegionSelector-Hint",
-                "[data-qa='region-selector-hint']",
-                ".supernova-region-selector",
-                "[data-qa='suggest-region-input']"
-            ]
+            # Используем селекторы, найденные в HTML-коде страницы
+            region_dialog = self.page.locator("[data-qa='drop-base']")
+            region_text = self.page.locator("text=Ваш регион — Химки (Московская область)")
 
-            dialog_found = False
-            for selector in region_dialog_selectors:
-                try:
-                    element = self.page.locator(selector)
-                    if await element.count() > 0:
-                        if self.logger:
-                            self.logger.info(f"Найден элемент диалога региона: {selector}")
-
-                        # Проверяем, что элемент видим
-                        if await element.is_visible():
-                            dialog_found = True
-                            break
-                except:
-                    continue  # Продолжаем поиск с другим селектором
-
-            if dialog_found:
+            # Проверяем, что диалог региона присутствует и видим
+            if await region_dialog.count() > 0 and await region_text.count() > 0:
                 if self.logger:
                     self.logger.info("Найдено диалоговое окно выбора региона")
 
-                # Ищем кнопку "Нет, другой" или "Изменить регион" или "Другой регион"
-                change_region_selectors = [
-                    "text=Нет, другой",
-                    "text=Изменить регион",
-                    "text=Другой регион",
-                    "text=Сменить регион",
-                    ".HH-RegionSelector-ChangeButton",
-                    "[data-qa='region-selector-change-button']"
-                ]
-
-                change_button_found = False
-                for selector in change_region_selectors:
-                    try:
-                        button = self.page.locator(selector)
-                        if await button.count() > 0 and await button.is_visible():
-                            await button.click()
-                            if self.logger:
-                                self.logger.info(f"Нажата кнопка изменения региона: {selector}")
-                            change_button_found = True
-                            break
-                    except:
-                        continue
-
-                if not change_button_found:
+                # Нажимаем кнопку "Нет, другой"
+                change_button = self.page.locator("[data-qa='region-clarification-change-button']")
+                if await change_button.count() > 0:
+                    await change_button.click()
                     if self.logger:
-                        self.logger.warning("Не найдена кнопка изменения региона")
+                        self.logger.info("Нажата кнопка 'Нет, другой'")
+                else:
+                    if self.logger:
+                        self.logger.warning("Не найдена кнопка 'Нет, другой'")
                     return True  # Продолжаем выполнение, даже если не нашли кнопку
 
                 # Ждем появление поля ввода региона
                 region_input_selectors = [
                     "[data-qa='suggest-region-input']",
-                    ".HH-SuggestRegion-Input",
                     "input[type='text'][placeholder*='регион' i]",
                     "input[placeholder*='регион' i]"
                 ]
@@ -121,8 +83,8 @@ class MainWorkflow:
                             moscow_option_selectors = [
                                 "text=Москва",
                                 "[data-qa*='moscow' i]",
-                                ".HH-SuggestRegion-Option:has-text('Москва')",
-                                "[data-qa='area-suggestion-1']"  # Moscow area ID is usually 1
+                                "[data-qa='area-suggestion-1']",  # Moscow area ID is usually 1
+                                "text=Москва и область"
                             ]
 
                             option_found = False
@@ -156,7 +118,7 @@ class MainWorkflow:
                 # Ждем исчезновения диалогового окна (обычно происходит автоматически после выбора)
                 try:
                     # Ждем, пока диалог региона исчезнет
-                    await self.page.wait_for_selector(".supernova-region-selector, .HH-RegionSelector-Hint", state="detached", timeout=10000)
+                    await self.page.wait_for_selector("[data-qa='drop-base']", state="detached", timeout=10000)
                     if self.logger:
                         self.logger.info("Диалоговое окно выбора региона закрыто")
                 except:
