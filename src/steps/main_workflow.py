@@ -40,35 +40,123 @@ class MainWorkflow:
 
         try:
             # Проверяем наличие диалогового окна с регионом
-            region_dialog = self.page.locator("text=Ваш регион — Химки (Московская область)?")
-            if await region_dialog.count() > 0:
+            # Используем более общие селекторы, которые могут работать с разными вариантами текста
+            region_dialog_selectors = [
+                "text=Ваш регион",
+                "text=регион",
+                ".HH-RegionSelector-Hint",
+                "[data-qa='region-selector-hint']",
+                ".supernova-region-selector",
+                "[data-qa='suggest-region-input']"
+            ]
+
+            dialog_found = False
+            for selector in region_dialog_selectors:
+                try:
+                    element = self.page.locator(selector)
+                    if await element.count() > 0:
+                        if self.logger:
+                            self.logger.info(f"Найден элемент диалога региона: {selector}")
+
+                        # Проверяем, что элемент видим
+                        if await element.is_visible():
+                            dialog_found = True
+                            break
+                except:
+                    continue  # Продолжаем поиск с другим селектором
+
+            if dialog_found:
                 if self.logger:
                     self.logger.info("Найдено диалоговое окно выбора региона")
 
-                # Нажимаем кнопку "Нет, другой"
-                no_other_button = self.page.locator("text=Нет, другой")
-                await no_other_button.click()
+                # Ищем кнопку "Нет, другой" или "Изменить регион" или "Другой регион"
+                change_region_selectors = [
+                    "text=Нет, другой",
+                    "text=Изменить регион",
+                    "text=Другой регион",
+                    "text=Сменить регион",
+                    ".HH-RegionSelector-ChangeButton",
+                    "[data-qa='region-selector-change-button']"
+                ]
 
-                if self.logger:
-                    self.logger.info("Нажата кнопка 'Нет, другой'")
+                change_button_found = False
+                for selector in change_region_selectors:
+                    try:
+                        button = self.page.locator(selector)
+                        if await button.count() > 0 and await button.is_visible():
+                            await button.click()
+                            if self.logger:
+                                self.logger.info(f"Нажата кнопка изменения региона: {selector}")
+                            change_button_found = True
+                            break
+                    except:
+                        continue
 
-                # Ждем появления нового диалогового окна
-                await self.page.wait_for_selector("text=Укажите ваш регион", timeout=5000)
+                if not change_button_found:
+                    if self.logger:
+                        self.logger.warning("Не найдена кнопка изменения региона")
+                    return True  # Продолжаем выполнение, даже если не нашли кнопку
 
-                # Выбираем радиобаттон "Москва"
-                moscow_radio = self.page.locator("input[type='radio'][value='Moscow']")
-                if await moscow_radio.count() == 0:
-                    # Если не нашли по значению, ищем по тексту
-                    moscow_radio = self.page.locator("text=Москва").nth(0)  # Первый элемент с текстом Москва
+                # Ждем появление поля ввода региона
+                region_input_selectors = [
+                    "[data-qa='suggest-region-input']",
+                    ".HH-SuggestRegion-Input",
+                    "input[type='text'][placeholder*='регион' i]",
+                    "input[placeholder*='регион' i]"
+                ]
 
-                await moscow_radio.click()
+                input_found = False
+                for selector in region_input_selectors:
+                    try:
+                        await self.page.wait_for_selector(selector, timeout=5000)
+                        region_input = self.page.locator(selector)
+                        if await region_input.is_visible():
+                            # Вводим "Москва" в поле
+                            await region_input.fill("Москва")
 
-                if self.logger:
-                    self.logger.info("Выбран регион 'Москва'")
+                            # Ждем появления списка с вариантами
+                            await self.page.wait_for_timeout(1000)
+
+                            # Выбираем "Москва" из выпадающего списка
+                            moscow_option_selectors = [
+                                "text=Москва",
+                                "[data-qa*='moscow' i]",
+                                ".HH-SuggestRegion-Option:has-text('Москва')",
+                                "[data-qa='area-suggestion-1']"  # Moscow area ID is usually 1
+                            ]
+
+                            option_found = False
+                            for option_selector in moscow_option_selectors:
+                                try:
+                                    option = self.page.locator(option_selector)
+                                    if await option.count() > 0 and await option.is_visible():
+                                        await option.click()
+                                        if self.logger:
+                                            self.logger.info(f"Выбран регион 'Москва' через селектор: {option_selector}")
+                                        option_found = True
+                                        break
+                                except:
+                                    continue
+
+                            if not option_found:
+                                if self.logger:
+                                    self.logger.warning("Не найден элемент 'Москва' в списке регионов")
+                                return True  # Продолжаем выполнение, даже если не нашли элемент
+
+                            input_found = True
+                            break
+                    except:
+                        continue
+
+                if not input_found:
+                    if self.logger:
+                        self.logger.warning("Не найдено поле ввода региона")
+                    return True  # Продолжаем выполнение, даже если не нашли поле
 
                 # Ждем исчезновения диалогового окна (обычно происходит автоматически после выбора)
                 try:
-                    await self.page.wait_for_selector("text=Ваш регион — Химки (Московская область)?", state="detached", timeout=10000)
+                    # Ждем, пока диалог региона исчезнет
+                    await self.page.wait_for_selector(".supernova-region-selector, .HH-RegionSelector-Hint", state="detached", timeout=10000)
                     if self.logger:
                         self.logger.info("Диалоговое окно выбора региона закрыто")
                 except:
@@ -79,15 +167,30 @@ class MainWorkflow:
                 await self.page.wait_for_timeout(2000)  # Даем время для обновления
 
                 # Проверяем, что регион сменился на Москву
-                current_location = self.page.locator("text=Москва")
-                if await current_location.count() > 0:
-                    if self.logger:
-                        self.logger.info("Регион успешно изменен на Москву")
-                    return True
-                else:
+                current_location_selectors = [
+                    "text=Москва",
+                    "[data-qa*='current-region' i]",
+                    ".supernova-current-region",
+                    ".HH-CurrentRegion"
+                ]
+
+                location_found = False
+                for selector in current_location_selectors:
+                    try:
+                        current_location = self.page.locator(selector)
+                        if await current_location.count() > 0:
+                            if self.logger:
+                                self.logger.info("Регион успешно изменен на Москву")
+                            location_found = True
+                            break
+                    except:
+                        continue
+
+                if not location_found:
                     if self.logger:
                         self.logger.warning("Не удалось подтвердить, что регион изменен на Москву")
-                    return True  # Все равно возвращаем True, так как основные действия выполнены
+
+                return True
             else:
                 if self.logger:
                     self.logger.info("Диалоговое окно выбора региона не найдено")
