@@ -2,7 +2,9 @@
 Базовый класс для Page Objects
 """
 from typing import Protocol, Union, Dict, Any
+from pathlib import Path
 from playwright.async_api import Page, Locator
+from ..utils.page_utils import save_page_source_on_error
 
 
 class PageProtocol(Protocol):
@@ -16,15 +18,16 @@ class PageProtocol(Protocol):
     def locator(self, selector: str) -> Locator: ...
     async def press(self, selector: str, key: str) -> None: ...
     async def screenshot(self, **kwargs) -> bytes: ...
+    async def content(self) -> str: ...
 
 
 class BasePage:
     """Базовый класс для всех Page Objects"""
-    
+
     def __init__(self, page: PageProtocol, config=None, logger=None):
         """
         Инициализация базовой страницы
-        
+
         :param page: Страница Playwright
         :param config: Объект конфигурации
         :param logger: Объект логгера
@@ -62,7 +65,7 @@ class BasePage:
     async def safe_click(self, selector: str, timeout: int = 30000) -> bool:
         """
         Безопасный клик по элементу
-        
+
         :param selector: Селектор элемента
         :param timeout: Таймаут ожидания в миллисекундах
         :return: True, если клик выполнен успешно
@@ -73,13 +76,15 @@ class BasePage:
             return True
         except Exception as e:
             if self.logger:
-                self.logger.error(f"Ошибка при клике на элемент {selector}: {e}")
+                # Сохраняем исходник страницы при ошибке
+                page_source_path = await save_page_source_on_error(self.page, f"click_{selector.replace(' ', '_').replace('.', '_').replace('[', '_').replace(']', '_').replace('=', '_').replace(',', '_').replace("'", '_').replace('(', '_').replace(')', '_').replace(':', '_').replace('-', '_').replace('/', '_')}")
+                self.logger.error(f"Ошибка при клике на элемент {selector}: {e}. Исходник страницы сохранен в {page_source_path}")
             return False
     
     async def safe_fill(self, selector: str, value: str, timeout: int = 30000) -> bool:
         """
         Безопасное заполнение поля
-        
+
         :param selector: Селектор поля
         :param value: Значение для заполнения
         :param timeout: Таймаут ожидания в миллисекундах
@@ -91,5 +96,7 @@ class BasePage:
             return True
         except Exception as e:
             if self.logger:
-                self.logger.error(f"Ошибка при заполнении поля {selector}: {e}")
+                # Сохраняем исходник страницы при ошибке
+                page_source_path = await save_page_source_on_error(self.page, f"fill_{selector.replace(' ', '_').replace('.', '_').replace('[', '_').replace(']', '_').replace('=', '_').replace(',', '_').replace("'", '_').replace('(', '_').replace(')', '_').replace(':', '_').replace('-', '_').replace('/', '_')}")
+                self.logger.error(f"Ошибка при заполнении поля {selector}: {e}. Исходник страницы сохранен в {page_source_path}")
             return False
