@@ -12,8 +12,10 @@ from src.business_logic.session_manager import SessionManager
 from src.steps.main_workflow import MainWorkflow
 from src.error_handler import ErrorHandler
 from src.logger import setup_logger
+from src.decorators import log_info
 
 
+@log_info()
 async def main():
     """Основная функция для запуска скрипта"""
     logger = setup_logger("hh_auto_responder")

@@ -1,37 +1,33 @@
 """
 Модуль логирования
 """
-import logging
 import sys
+from loguru import logger as loguru_logger
+import logging
 from typing import Any
 
 
-def setup_logger(name: str = __name__, level: int = logging.INFO) -> logging.Logger:
+def setup_logger(name: str = __name__, level: str = "INFO"):
     """
     Настройка логгера с форматированием
-    
-    :param name: Имя логгера
+
+    :param name: Имя логгера (не используется в loguru, но сохраняем для совместимости)
     :param level: Уровень логирования
     :return: Настроенный объект логгера
     """
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
+    # Удаляем стандартные обработчики
+    loguru_logger.remove()
 
-    # Предотвращаем добавление обработчиков при повторной инициализации
-    if logger.handlers:
-        return logger
-
-    # Создаем форматтер для логов
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    # Добавляем новый обработчик с нужным форматом
+    loguru_logger.add(
+        sys.stdout,
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} | {message}",
+        level=level,
+        colorize=True
     )
 
-    # Создаем обработчик для вывода в консоль
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(level)
-    console_handler.setFormatter(formatter)
+    return loguru_logger
 
-    # Добавляем обработчик к логгеру
-    logger.addHandler(console_handler)
 
-    return logger
+# Экспортируем глобальный логгер loguru для совместимости
+logger = loguru_logger

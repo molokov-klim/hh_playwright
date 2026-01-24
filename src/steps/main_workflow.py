@@ -5,15 +5,16 @@ from ..steps.auth_steps import AuthSteps
 from ..steps.resume_steps import ResumeSteps
 from ..steps.vacancy_steps import VacancySteps
 from ..steps.application_steps import ApplicationSteps
+from ..decorators import log_info
 
 
 class MainWorkflow:
     """Класс для основного сценария работы hh_auto_responder"""
-    
+
     def __init__(self, page, config, logger):
         """
         Инициализация основного сценария
-        
+
         :param page: Страница Playwright
         :param config: Объект конфигурации
         :param logger: Объект логгера
@@ -21,13 +22,14 @@ class MainWorkflow:
         self.page = page
         self.config = config
         self.logger = logger
-        
+
         # Инициализация всех шагов
         self.auth_steps = AuthSteps(page, config, logger)
         self.resume_steps = ResumeSteps(page, config, logger)
         self.vacancy_steps = VacancySteps(page, config, logger)
         self.application_steps = ApplicationSteps(page, config, logger)
-    
+
+    @log_info()
     async def run_full_workflow(self, cover_letter: str = "") -> tuple[bool, int, int]:
         """
         Запуск полного сценария работы
