@@ -24,6 +24,18 @@ async def main():
         # Загрузка конфигурации
         config = get_config_from_env()
         logger.info("Конфигурация успешно загружена")
+
+        # Логгирование значений конфигурации
+        logger.info(f"HH_LOGIN: {config.HH_LOGIN}")
+        logger.info(f"HEADLESS: {config.HEADLESS}")
+        logger.info(f"FAKE: {config.FAKE}")
+        logger.info(f"VIEWPORT_WIDTH: {config.VIEWPORT_WIDTH}")
+        logger.info(f"VIEWPORT_HEIGHT: {config.VIEWPORT_HEIGHT}")
+        logger.info(f"USER_AGENT: {config.USER_AGENT}")
+        logger.info(f"TIMEOUT: {config.TIMEOUT}")
+        logger.info(f"RESUME_ID: {config.RESUME_ID}")
+        logger.info(f"TELEGRAM_BOT_TOKEN: {'***' if config.TELEGRAM_BOT_TOKEN else 'Not set'}")
+        logger.info(f"TELEGRAM_CHAT_ID: {'***' if config.TELEGRAM_CHAT_ID else 'Not set'}")
     except ValueError as e:
         logger.error(f"Ошибка загрузки конфигурации: {e}")
         sys.exit(1)
