@@ -16,7 +16,7 @@ class Config:
     USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     TIMEOUT: int = 30000
     RESUME_ID: str = ""  # Может быть пустым, будет определен автоматически
-    FAKE: bool = False  # Если True, реальные отклики не отправляются
+    FAKE: bool = True  # Если True, реальные отклики не отправляются
     TELEGRAM_BOT_TOKEN: str = ""  # Токен для Telegram бота
     TELEGRAM_CHAT_ID: str = ""  # ID чата для отправки отчетов
 
