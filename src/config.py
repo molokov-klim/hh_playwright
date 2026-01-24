@@ -16,6 +16,9 @@ class Config:
     USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     TIMEOUT: int = 30000
     RESUME_ID: str = ""  # Может быть пустым, будет определен автоматически
+    FAKE: bool = False  # Если True, реальные отклики не отправляются
+    TELEGRAM_BOT_TOKEN: str = ""  # Токен для Telegram бота
+    TELEGRAM_CHAT_ID: str = ""  # ID чата для отправки отчетов
 
 
 def load_dotenv_if_exists():
@@ -68,11 +71,17 @@ def get_config_from_env() -> Config:
     headless_str = os.getenv('HEADLESS', 'true').lower()
     headless = headless_str not in ('false', '0', 'no', 'off')
 
+    # Преобразование строки в булево значение для FAKE
+    fake_str = os.getenv('FAKE', 'false').lower()
+    fake = fake_str in ('true', '1', 'yes', 'on')
+
     viewport_width = int(os.getenv('VIEWPORT_WIDTH', '1920'))
     viewport_height = int(os.getenv('VIEWPORT_HEIGHT', '1080'))
     user_agent = os.getenv('USER_AGENT', "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     timeout = int(os.getenv('TIMEOUT', '30000'))
     resume_id = os.getenv('RESUME_ID', '')
+    telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN', '')
+    telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID', '')
 
     return Config(
         HH_LOGIN=login,
@@ -82,5 +91,8 @@ def get_config_from_env() -> Config:
         VIEWPORT_HEIGHT=viewport_height,
         USER_AGENT=user_agent,
         TIMEOUT=timeout,
-        RESUME_ID=resume_id
+        RESUME_ID=resume_id,
+        FAKE=fake,
+        TELEGRAM_BOT_TOKEN=telegram_bot_token,
+        TELEGRAM_CHAT_ID=telegram_chat_id
     )

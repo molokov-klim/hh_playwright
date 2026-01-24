@@ -20,6 +20,7 @@ class TestApplicationSender:
         """Мок конфигурации"""
         config = Mock()
         config.TIMEOUT = 30000
+        config.FAKE = False  # По умолчанию режим FAKE выключен
         return config
 
     @pytest.fixture
@@ -116,35 +117,47 @@ class TestApplicationSender:
         # Подготовка
         sender = ApplicationSender(mock_config, mock_logger)
         vacancy = Mock()
-        
+
+        # Мок для получения информации о вакансии
+        title_element = Mock()
+        title_element.inner_text = AsyncMock(return_value="Python Developer")
+        id_element = Mock()
+        id_element.get_attribute = AsyncMock(return_value="vac123")
+
+        def mock_locator(selector):
+            if selector == "[data-qa='vacancy-title']":
+                return title_element
+            elif selector == "[data-qa='vacancy-id']":
+                return id_element
+            else:
+                return Mock()
+
+        vacancy.locator.side_effect = mock_locator
+
         # Мок для методов
         with patch.object(sender, 'click_apply_button', new_callable=AsyncMock) as mock_click_apply, \
              patch.object(sender, 'wait_for_application_result', new_callable=AsyncMock) as mock_wait_result, \
              patch.object(sender, 'log_application_result', new_callable=AsyncMock) as mock_log_result:
-            
-            mock_wait_result.return_value = "Успешно"
-            
-            # Мок для получения информации о вакансии
-            title_element = Mock()
-            title_element.inner_text = AsyncMock(return_value="Python Developer")
-            id_element = Mock()
-            id_element.get_attribute = AsyncMock(return_value="vac123")
-            
-            def mock_locator(selector):
-                if selector == "[data-qa='vacancy-title']":
-                    return title_element
-                elif selector == "[data-qa='vacancy-id']":
-                    return id_element
-                else:
-                    return Mock()
-            
-            vacancy.locator.side_effect = mock_locator
 
-            # Выполнение
-            result = await sender.apply_to_vacancy(vacancy)
+            # В зависимости от режима FAKE ожидаем разные результаты
+            if mock_config.FAKE:
+                # В режиме FAKE не должен вызываться click_apply_button
+                result = await sender.apply_to_vacancy(vacancy)
 
-            # Проверка
-            mock_click_apply.assert_called_once_with(vacancy)
-            mock_wait_result.assert_called_once_with(vacancy)
-            mock_log_result.assert_called_once_with("Python Developer", "vac123", "Успешно")
-            assert result == "Успешно"
+                # Проверяем, что результат соответствует режиму FAKE
+                assert result == "Успешно (FAKE)"
+
+                # Проверяем, что click_apply_button не был вызван в режиме FAKE
+                mock_click_apply.assert_not_called()
+            else:
+                # В обычном режиме должен вызываться click_apply_button
+                mock_wait_result.return_value = "Успешно"
+
+                # Выполнение
+                result = await sender.apply_to_vacancy(vacancy)
+
+                # Проверка
+                mock_click_apply.assert_called_once_with(vacancy)
+                mock_wait_result.assert_called_once_with(vacancy)
+                mock_log_result.assert_called_once_with("Python Developer", "vac123", "Успешно")
+                assert result == "Успешно"

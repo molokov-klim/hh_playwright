@@ -97,45 +97,60 @@ class ApplicationHandler:
     async def apply_to_vacancy(self, vacancy_locator, cover_letter: str = "") -> str:
         """
         Полный цикл отклика на вакансию
-        
+
         :param vacancy_locator: Локатор вакансии
         :param cover_letter: Текст сопроводительного письма (опционально)
         :return: Результат отклика
         """
         # Получаем информацию о вакансии
         vacancy_title, vacancy_id = await self.vacancy_page.get_vacancy_info(vacancy_locator)
-        
+
         if self.logger:
             self.logger.info(f"Отправка отклика на вакансию '{vacancy_title}' (ID: {vacancy_id})")
-        
+
+        # Проверяем, нужно ли отправлять реальный отклик
+        if self.config.FAKE:
+            if self.logger:
+                self.logger.info(f"Режим FAKE включен, реальный отклик на вакансию '{vacancy_title}' не отправляется")
+            result = "Успешно (FAKE)"
+            await self.log_application_result(vacancy_title, vacancy_id, result)
+
+            # Добавляем паузу между "откликами" для имитации человеческого поведения
+            pause_duration = random.uniform(1.5, 4)
+            if self.logger:
+                self.logger.debug(f"Пауза {pause_duration:.2f} секунд между откликами")
+            await asyncio.sleep(pause_duration)
+
+            return result
+
         # Клик по кнопке отклика
         if not await self.click_apply_button(vacancy_locator):
             result = "Ошибка"
             await self.log_application_result(vacancy_title, vacancy_id, result)
             return result
-        
+
         # Если есть сопроводительное письмо, заполняем его
         if cover_letter:
             if not await self.fill_cover_letter(cover_letter):
                 if self.logger:
                     self.logger.warning(f"Не удалось заполнить сопроводительное письмо для вакансии {vacancy_title}")
-        
+
         # Клик по кнопке отправки
         if not await self.click_send_response():
             result = "Ошибка"
             await self.log_application_result(vacancy_title, vacancy_id, result)
             return result
-        
+
         # Ожидание результата
         result = await self.wait_for_response_result()
-        
+
         # Логирование результата
         await self.log_application_result(vacancy_title, vacancy_id, result)
-        
+
         # Добавляем паузу между откликами для имитации человеческого поведения
         pause_duration = random.uniform(1.5, 4)
         if self.logger:
             self.logger.debug(f"Пауза {pause_duration:.2f} секунд между откликами")
         await asyncio.sleep(pause_duration)
-        
+
         return result

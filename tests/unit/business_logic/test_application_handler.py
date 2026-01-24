@@ -113,17 +113,31 @@ class TestApplicationHandler:
         """Тест полного цикла отклика на вакансию"""
         mock_vacancy_locator = Mock()
         cover_letter = "Тестовое сопроводительное письмо"
-        expected_result = "Успешно"
-        
+
         # Мок для всех необходимых методов
-        with patch.object(application_handler.vacancy_page, 'get_vacancy_info', 
+        with patch.object(application_handler.vacancy_page, 'get_vacancy_info',
                          return_value=("Python Developer", "12345")), \
              patch.object(application_handler, 'click_apply_button', return_value=True), \
              patch.object(application_handler, 'fill_cover_letter', return_value=True), \
              patch.object(application_handler, 'click_send_response', return_value=True), \
-             patch.object(application_handler, 'wait_for_response_result', return_value=expected_result), \
              patch.object(application_handler, 'log_application_result'):
-            
-            result = await application_handler.apply_to_vacancy(mock_vacancy_locator, cover_letter)
-            
-            assert result == expected_result
+
+            # В зависимости от режима FAKE ожидаем разные результаты
+            if application_handler.config.FAKE:
+                expected_result = "Успешно (FAKE)"
+                # В режиме FAKE не должен вызываться wait_for_response_result
+                with patch.object(application_handler, 'wait_for_response_result') as mock_wait_result:
+                    result = await application_handler.apply_to_vacancy(mock_vacancy_locator, cover_letter)
+
+                    assert result == expected_result
+                    # Проверяем, что не был вызван метод ожидания результата
+                    mock_wait_result.assert_not_called()
+            else:
+                expected_result = "Успешно"
+                # В обычном режиме должен вызываться wait_for_response_result
+                with patch.object(application_handler, 'wait_for_response_result', return_value=expected_result) as mock_wait_result:
+                    result = await application_handler.apply_to_vacancy(mock_vacancy_locator, cover_letter)
+
+                    assert result == expected_result
+                    # Проверяем, что был вызван метод ожидания результата
+                    mock_wait_result.assert_called_once()

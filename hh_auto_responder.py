@@ -40,14 +40,17 @@ async def main():
         # Инициализация обработчика ошибок
         error_handler = ErrorHandler(config, logger)
 
+        # Отправка уведомления о запуске в Telegram
+        await error_handler.send_startup_notification()
+
         # Инициализация основного сценария
         main_workflow = MainWorkflow(page, config, logger)
 
         try:
             # Запуск основного сценария
             logger.info("Начало выполнения основного сценария")
-            success = await main_workflow.run_full_workflow()
-            
+            success, success_count, error_count = await main_workflow.run_full_workflow()
+
             if success:
                 logger.info("Основной сценарий успешно завершен")
             else:
@@ -55,6 +58,7 @@ async def main():
 
         except Exception as e:
             logger.error(f"Ошибка в процессе работы скрипта: {e}")
+            error_count += 1
 
             # Обработка ошибки
             await error_handler.handle_general_error(page, e)
@@ -73,6 +77,12 @@ async def main():
         # Завершение сессии
         await session_manager.end_session()
         logger.info("Сессия браузера завершена")
+
+        # Отправка уведомления о завершении в Telegram (если настроено)
+        await error_handler.send_shutdown_notification(success_count, error_count)
+
+        # Очистка ресурсов обработчика ошибок
+        error_handler.cleanup()
 
 
 if __name__ == "__main__":

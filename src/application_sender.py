@@ -116,8 +116,33 @@ class ApplicationSender:
             stacklevel=2
         )
         # Используем новый подход
+
+        # Проверяем, нужно ли отправлять реальный отклик
+        if self.config.FAKE:
+            # Получаем информацию о вакансии
+            title_element = vacancy.locator("[data-qa='vacancy-title']")
+            vacancy_title = await title_element.inner_text()
+
+            id_element = vacancy.locator("[data-qa='vacancy-id']")
+            vacancy_id = await id_element.get_attribute("data-id") or ""
+
+            if self.logger:
+                self.logger.info(f"Режим FAKE включен, реальный отклик на вакансию '{vacancy_title}' (ID: {vacancy_id}) не отправляется")
+
+            result = "Успешно (FAKE)"
+            await self.log_application_result(vacancy_title, vacancy_id, result)
+
+            # Добавляем паузу между "откликами" для имитации человеческого поведения
+            pause_duration = random.uniform(1.5, 4)
+            if self.logger:
+                self.logger.debug(f"Пауза {pause_duration:.2f} секунд между откликами")
+            await asyncio.sleep(pause_duration)
+
+            return result
+
+        # Используем новый подход
         from src.business_logic.application_handler import ApplicationHandler
-        
+
         # Получаем информацию о вакансии
         title_element = vacancy.locator("[data-qa='vacancy-title']")
         vacancy_title = await title_element.inner_text()
