@@ -8,32 +8,33 @@ from dataclasses import dataclass
 @dataclass
 class Config:
     """Класс для хранения конфигурации приложения"""
+
     HH_LOGIN: str
     HH_PASSWORD: str
-    HEADLESS: bool = False
-    VIEWPORT_WIDTH: int = 1920
-    VIEWPORT_HEIGHT: int = 1080
-    USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    TIMEOUT: int = 30000
-    RESUME_ID: str = ""  # Может быть пустым, будет определен автоматически
-    FAKE: bool = True  # Если True, реальные отклики не отправляются
-    TELEGRAM_BOT_TOKEN: str = ""  # Токен для Telegram бота
-    TELEGRAM_CHAT_ID: str = ""  # ID чата для отправки отчетов
+    HEADLESS: bool
+    VIEWPORT_WIDTH: int # 1920
+    VIEWPORT_HEIGHT: int # 1080
+    USER_AGENT: str # "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    TIMEOUT: int # 30000
+    RESUME_ID: str # ""  # Может быть пустым, будет определен автоматически
+    FAKE: bool
+    TELEGRAM_BOT_TOKEN: str
+    TELEGRAM_CHAT_ID: str
 
 
 def load_dotenv_if_exists():
     """
     Загружает переменные из .env файла, если он существует
     """
-    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 
     if os.path.exists(dotenv_path):
         try:
-            with open(dotenv_path, 'r', encoding='utf-8') as file:
+            with open(dotenv_path, encoding="utf-8") as file:
                 for line in file:
                     line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        key, value = line.split('=', 1)
+                    if line and not line.startswith("#") and "=" in line:
+                        key, value = line.split("=", 1)
                         key = key.strip()
                         value = value.strip()
 
@@ -58,8 +59,8 @@ def get_config_from_env() -> Config:
     # Загружаем .env файл, если он существует
     load_dotenv_if_exists()
 
-    login = os.getenv('HH_LOGIN')
-    password = os.getenv('HH_PASSWORD')
+    login = os.getenv("HH_LOGIN")
+    password = os.getenv("HH_PASSWORD")
 
     if not login:
         raise ValueError("HH_LOGIN environment variable is required")
@@ -68,20 +69,20 @@ def get_config_from_env() -> Config:
         raise ValueError("HH_PASSWORD environment variable is required")
 
     # Преобразование строки в булево значение для HEADLESS
-    headless_str = os.getenv('HEADLESS', 'true').lower()
-    headless = headless_str not in ('false', '0', 'no', 'off')
+    headless_str = os.getenv("HEADLESS", "true").lower()
+    headless = headless_str not in ("false", "0", "no", "off")
 
     # Преобразование строки в булево значение для FAKE
-    fake_str = os.getenv('FAKE', 'false').lower()
-    fake = fake_str in ('true', '1', 'yes', 'on')
+    fake_str = os.getenv("FAKE", "false").lower()
+    fake = fake_str in ("true", "1", "yes", "on")
 
-    viewport_width = int(os.getenv('VIEWPORT_WIDTH', '1920'))
-    viewport_height = int(os.getenv('VIEWPORT_HEIGHT', '1080'))
-    user_agent = os.getenv('USER_AGENT', "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    timeout = int(os.getenv('TIMEOUT', '30000'))
-    resume_id = os.getenv('RESUME_ID', '')
-    telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN', '')
-    telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID', '')
+    viewport_width = int(os.getenv("VIEWPORT_WIDTH", "1920"))
+    viewport_height = int(os.getenv("VIEWPORT_HEIGHT", "1080"))
+    user_agent = os.getenv("USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    timeout = int(os.getenv("TIMEOUT", "30000"))
+    resume_id = os.getenv("RESUME_ID", "")
+    telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
 
     return Config(
         HH_LOGIN=login,

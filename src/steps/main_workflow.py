@@ -29,6 +29,76 @@ class MainWorkflow:
         self.vacancy_steps = VacancySteps(page, config, logger)
         self.application_steps = ApplicationSteps(page, config, logger)
 
+    async def handle_region_dialog(self) -> bool:
+        """
+        Обработка диалогового окна выбора региона
+
+        :return: True, если диалог успешно обработан или не найден
+        """
+        if self.logger:
+            self.logger.info("Проверка наличия диалога выбора региона")
+
+        try:
+            # Проверяем наличие диалогового окна с регионом
+            region_dialog = self.page.locator("text=Ваш регион — Химки (Московская область)?")
+            if await region_dialog.count() > 0:
+                if self.logger:
+                    self.logger.info("Найдено диалоговое окно выбора региона")
+
+                # Нажимаем кнопку "Нет, другой"
+                no_other_button = self.page.locator("text=Нет, другой")
+                await no_other_button.click()
+
+                if self.logger:
+                    self.logger.info("Нажата кнопка 'Нет, другой'")
+
+                # Ждем появления нового диалогового окна
+                await self.page.wait_for_selector("text=Укажите ваш регион", timeout=5000)
+
+                # Выбираем радиобаттон "Москва"
+                moscow_radio = self.page.locator("input[type='radio'][value='Moscow']")
+                if await moscow_radio.count() == 0:
+                    # Если не нашли по значению, ищем по тексту
+                    moscow_radio = self.page.locator("text=Москва").nth(0)  # Первый элемент с текстом Москва
+
+                await moscow_radio.click()
+
+                if self.logger:
+                    self.logger.info("Выбран регион 'Москва'")
+
+                # Ждем исчезновения диалогового окна (обычно происходит автоматически после выбора)
+                try:
+                    await self.page.wait_for_selector("text=Ваш регион — Химки (Московская область)?", state="detached", timeout=10000)
+                    if self.logger:
+                        self.logger.info("Диалоговое окно выбора региона закрыто")
+                except:
+                    if self.logger:
+                        self.logger.info("Диалоговое окно выбора региона, возможно, уже закрыто")
+
+                # Проверяем, что на странице отображается "Москва" как регион
+                await self.page.wait_for_timeout(2000)  # Даем время для обновления
+
+                # Проверяем, что регион сменился на Москву
+                current_location = self.page.locator("text=Москва")
+                if await current_location.count() > 0:
+                    if self.logger:
+                        self.logger.info("Регион успешно изменен на Москву")
+                    return True
+                else:
+                    if self.logger:
+                        self.logger.warning("Не удалось подтвердить, что регион изменен на Москву")
+                    return True  # Все равно возвращаем True, так как основные действия выполнены
+            else:
+                if self.logger:
+                    self.logger.info("Диалоговое окно выбора региона не найдено")
+                return True
+
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Ошибка при обработке диалога выбора региона: {e}")
+            # Ошибка обработки диалога не должна останавливать выполнение сценария
+            return True
+
     @async_log_info()
     async def run_full_workflow(self, cover_letter: str = "") -> tuple[bool, int, int]:
         """
@@ -44,6 +114,14 @@ class MainWorkflow:
         error_count = 0
 
         try:
+            # Шаг 0: Обработка диалога выбора региона
+            if not await self.handle_region_dialog():
+                if self.logger:
+                    self.logger.warning("Не удалось обработать диалог выбора региона")
+                # Продолжаем выполнение, даже если диалог не был обработан
+
+            if self.logger:
+                self.logger.info("Диалог выбора региона обработан")
             # Шаг 1: Авторизация
             if not await self.auth_steps.login_to_hh():
                 if self.logger:
