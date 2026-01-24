@@ -245,6 +245,10 @@ class TestModuleIntegration:
         # Подготовка
         logger = setup_logger("test_error_handler_integration")
 
+        # Мокируем конфигурацию так, чтобы не вызывался TelegramNotifier
+        mock_config.TELEGRAM_BOT_TOKEN = None
+        mock_config.TELEGRAM_CHAT_ID = None
+
         error_handler = ErrorHandler(mock_config, logger)
         auth_handler = AuthHandler(mock_page, mock_config, logger)
 

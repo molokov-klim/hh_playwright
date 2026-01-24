@@ -191,7 +191,9 @@ class TestFullScenario:
 
             async def run_full_workflow():
                 result = await main_workflow.run_full_workflow()
-                assert result is True
+                # run_full_workflow возвращает кортеж (успех, количество успешных откликов, количество ошибок)
+                success, success_count, error_count = result
+                assert success is True
 
             import asyncio
             asyncio.run(run_full_workflow())
@@ -200,6 +202,11 @@ class TestFullScenario:
         """Тест полного сценария с обработкой ошибок"""
         # Подготовка всех модулей
         auth_steps = AuthSteps(mock_page, mock_config, mock_logger)
+
+        # Мокируем конфигурацию так, чтобы не вызывался TelegramNotifier
+        mock_config.TELEGRAM_BOT_TOKEN = None
+        mock_config.TELEGRAM_CHAT_ID = None
+
         error_handler = ErrorHandler(mock_config, mock_logger)
 
         # Мок для неудачной авторизации и обработки ошибок
