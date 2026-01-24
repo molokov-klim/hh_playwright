@@ -214,6 +214,10 @@ class TestFakeVariableFunctionality:
             
             # Выполняем полный сценарий
             result = await main_workflow.run_full_workflow()
-            
+
+            # run_full_workflow возвращает кортеж (успех, количество успешных откликов, количество ошибок)
+            success, success_count, error_count = result
             # Проверяем, что сценарий завершился успешно
-            assert result is True
+            assert success is True
+            assert success_count == 1  # 1 вакансия, на которую откликнулись
+            assert error_count == 0

@@ -2,7 +2,7 @@
 Обработчик авторизации на hh.ru
 """
 from ..pages.auth_page import AuthPage
-from ..decorators import log_info
+from ..decorators import async_log_info
 
 
 class AuthHandler:
@@ -21,7 +21,7 @@ class AuthHandler:
         self.logger = logger
         self.auth_page = AuthPage(page, config, logger)
 
-    @log_info()
+    @async_log_info()
     async def perform_auth(self) -> bool:
         """
         Выполнение авторизации на hh.ru

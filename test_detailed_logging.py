@@ -7,7 +7,7 @@ import sys
 from contextlib import redirect_stdout, redirect_stderr
 from unittest.mock import Mock, AsyncMock
 
-from src.decorators import log_info
+from src.decorators import log_info, async_log_info
 from src.business_logic.application_handler import ApplicationHandler
 from src.business_logic.auth_handler import AuthHandler
 from src.steps.main_workflow import MainWorkflow
@@ -15,9 +15,9 @@ from src.logger import setup_logger
 
 
 def test_log_info_decorator():
-    """Тест декоратора log_info"""
+    """Тест декораторов log_info и async_log_info"""
     # Создаем тестовую асинхронную функцию
-    @log_info()
+    @async_log_info()
     async def test_async_function(x, y, z=None):
         return x + y + (z or 0)
 
@@ -37,7 +37,7 @@ def test_log_info_decorator():
 
     asyncio.run(run_async_test())
 
-    print("✓ Декоратор log_info корректно логгирует информацию о вызовах функций")
+    print("✓ Декораторы log_info и async_log_info корректно логгируют информацию о вызовах функций")
 
 
 def test_application_handler_with_logging():

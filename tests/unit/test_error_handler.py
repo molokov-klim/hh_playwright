@@ -19,6 +19,8 @@ class TestErrorHandler:
     def mock_config(self):
         """Мок конфигурации"""
         config = Mock()
+        config.TELEGRAM_BOT_TOKEN = "6209761567:AAG3QwLjuGqAoFVww4PqvmEcB-O-8qiXZFk"
+        config.TELEGRAM_CHAT_ID = "1353223764"
         config.TIMEOUT = 30000
         return config
 
@@ -38,14 +40,20 @@ class TestErrorHandler:
         logger.debug = Mock()
         return logger
 
-    def test_init_creates_correct_instance(self, mock_config, mock_logger):
+    @patch('src.error_handler.TelegramNotifier')
+    def test_init_creates_correct_instance(self, mock_telegram_notifier_class, mock_config, mock_logger):
         """Тест инициализации класса ErrorHandler"""
+        # Мокаем экземпляр TelegramNotifier
+        mock_telegram_notifier_instance = Mock()
+        mock_telegram_notifier_class.return_value = mock_telegram_notifier_instance
+
         # Выполнение
         handler = ErrorHandler(mock_config, mock_logger)
 
         # Проверка
         assert handler.config == mock_config
         assert handler.logger == mock_logger
+        assert handler.telegram_notifier == mock_telegram_notifier_instance
 
     @pytest.mark.asyncio
     async def test_take_screenshot_on_error(self, mock_config, mock_page, mock_logger):
@@ -60,13 +68,18 @@ class TestErrorHandler:
         # Проверка
         mock_page.screenshot.assert_called_once_with(path=screenshot_path)
 
+    @patch('src.error_handler.TelegramNotifier')
     @pytest.mark.asyncio
-    async def test_handle_captcha_detection(self, mock_config, mock_page, mock_logger):
+    async def test_handle_captcha_detection(self, mock_telegram_notifier_class, mock_config, mock_page, mock_logger):
         """Тест обработки обнаружения капчи"""
+        # Мокаем экземпляр TelegramNotifier
+        mock_telegram_notifier_instance = Mock()
+        mock_telegram_notifier_class.return_value = mock_telegram_notifier_instance
+
         # Подготовка
         handler = ErrorHandler(mock_config, mock_logger)
         error_msg = "Обнаружена капча"
-        
+
         with patch.object(handler, 'take_screenshot_on_error', new_callable=AsyncMock) as mock_take_screenshot:
             # Выполнение
             with pytest.raises(Exception, match=error_msg):
@@ -76,13 +89,18 @@ class TestErrorHandler:
             mock_take_screenshot.assert_called_once()
             mock_logger.error.assert_called_once_with(error_msg)
 
+    @patch('src.error_handler.TelegramNotifier')
     @pytest.mark.asyncio
-    async def test_handle_unexpected_modal_window(self, mock_config, mock_page, mock_logger):
+    async def test_handle_unexpected_modal_window(self, mock_telegram_notifier_class, mock_config, mock_page, mock_logger):
         """Тест обработки неожиданного модального окна"""
+        # Мокаем экземпляр TelegramNotifier
+        mock_telegram_notifier_instance = Mock()
+        mock_telegram_notifier_class.return_value = mock_telegram_notifier_instance
+
         # Подготовка
         handler = ErrorHandler(mock_config, mock_logger)
         error_msg = "Обнаружено неожиданное модальное окно"
-        
+
         with patch.object(handler, 'take_screenshot_on_error', new_callable=AsyncMock) as mock_take_screenshot:
             # Выполнение
             with pytest.raises(Exception, match=error_msg):
@@ -92,13 +110,18 @@ class TestErrorHandler:
             mock_take_screenshot.assert_called_once()
             mock_logger.error.assert_called_once_with(error_msg)
 
+    @patch('src.error_handler.TelegramNotifier')
     @pytest.mark.asyncio
-    async def test_handle_general_error(self, mock_config, mock_page, mock_logger):
+    async def test_handle_general_error(self, mock_telegram_notifier_class, mock_config, mock_page, mock_logger):
         """Тест обработки общей ошибки"""
+        # Мокаем экземпляр TelegramNotifier
+        mock_telegram_notifier_instance = Mock()
+        mock_telegram_notifier_class.return_value = mock_telegram_notifier_instance
+
         # Подготовка
         handler = ErrorHandler(mock_config, mock_logger)
         error = Exception("Общая ошибка")
-        
+
         with patch.object(handler, 'take_screenshot_on_error', new_callable=AsyncMock) as mock_take_screenshot:
             # Выполнение
             with pytest.raises(Exception, match=str(error)):

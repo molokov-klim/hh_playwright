@@ -5,7 +5,7 @@ import asyncio
 import random
 from ..pages.vacancy_page import VacancyPage
 from ..pages.application_page import ApplicationPage
-from ..decorators import log_info
+from ..decorators import async_log_info
 
 
 class ApplicationHandler:
@@ -25,7 +25,7 @@ class ApplicationHandler:
         self.vacancy_page = VacancyPage(page, config, logger)
         self.application_page = ApplicationPage(page, config, logger)
 
-    @log_info()
+    @async_log_info()
     async def click_apply_button(self, vacancy_locator) -> bool:
         """
         Клик по кнопке отклика на вакансию
@@ -38,7 +38,7 @@ class ApplicationHandler:
 
         return await self.vacancy_page.click_apply_button(vacancy_locator)
 
-    @log_info()
+    @async_log_info()
     async def wait_for_application_result(self, timeout: int = 30000) -> str:
         """
         Ожидание результата отклика
@@ -51,7 +51,7 @@ class ApplicationHandler:
 
         return await self.vacancy_page.wait_for_application_result(timeout)
 
-    @log_info()
+    @async_log_info()
     async def fill_cover_letter(self, cover_letter: str) -> bool:
         """
         Заполнение сопроводительного письма
@@ -64,7 +64,7 @@ class ApplicationHandler:
 
         return await self.application_page.fill_cover_letter(cover_letter)
 
-    @log_info()
+    @async_log_info()
     async def click_send_response(self) -> bool:
         """
         Клик по кнопке отправки отклика
@@ -76,7 +76,7 @@ class ApplicationHandler:
 
         return await self.application_page.click_send_response()
 
-    @log_info()
+    @async_log_info()
     async def wait_for_response_result(self, timeout: int = 30000) -> str:
         """
         Ожидание результата отправки отклика
@@ -89,7 +89,7 @@ class ApplicationHandler:
 
         return await self.application_page.wait_for_response_result(timeout)
 
-    @log_info()
+    @async_log_info()
     async def log_application_result(self, vacancy_title: str, vacancy_id: str, result: str) -> None:
         """
         Логирование результата отклика
@@ -101,7 +101,7 @@ class ApplicationHandler:
         if self.logger:
             self.logger.info(f"Отклик на вакансию '{vacancy_title}' (ID: {vacancy_id}) завершен со статусом: {result}")
 
-    @log_info()
+    @async_log_info()
     async def apply_to_vacancy(self, vacancy_locator, cover_letter: str = "") -> str:
         """
         Полный цикл отклика на вакансию

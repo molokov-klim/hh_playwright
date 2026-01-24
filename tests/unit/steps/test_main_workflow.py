@@ -49,7 +49,7 @@ class TestMainWorkflow:
     async def test_run_full_workflow_success(self, main_workflow):
         """Тест успешного выполнения полного сценария"""
         cover_letter = "Тестовое сопроводительное письмо"
-        
+
         with patch.object(main_workflow.auth_steps, 'login_to_hh', return_value=True), \
              patch.object(main_workflow.resume_steps, 'navigate_to_my_resumes', return_value=True), \
              patch.object(main_workflow.resume_steps, 'select_first_resume', return_value=True), \
@@ -57,54 +57,70 @@ class TestMainWorkflow:
              patch.object(main_workflow.vacancy_steps, 'wait_for_vacancies_loaded', return_value=True), \
              patch.object(main_workflow.vacancy_steps, 'get_applicable_vacancies', return_value=[Mock(), Mock()]), \
              patch.object(main_workflow.application_steps, 'apply_to_vacancy', return_value="Успешно"):
-            
+
             result = await main_workflow.run_full_workflow(cover_letter)
-            
-            assert result is True
+
+            # run_full_workflow возвращает кортеж (успех, количество успешных откликов, количество ошибок)
+            success, success_count, error_count = result
+            assert success is True
+            assert success_count == 2  # 2 вакансии, на которые откликнулись
+            assert error_count == 0
     
     async def test_run_full_workflow_auth_failure(self, main_workflow):
         """Тест неудачной авторизации в полном сценарии"""
         cover_letter = "Тестовое сопроводительное письмо"
-        
+
         with patch.object(main_workflow.auth_steps, 'login_to_hh', return_value=False):
-            
+
             result = await main_workflow.run_full_workflow(cover_letter)
-            
-            assert result is False
-    
+
+            success, success_count, error_count = result
+            assert success is False
+            assert success_count == 0
+            assert error_count == 0  # Ошибка произошла до начала обработки вакансий
+
     async def test_run_full_workflow_navigate_to_resumes_failure(self, main_workflow):
         """Тест неудачного перехода к резюме в полном сценарии"""
         cover_letter = "Тестовое сопроводительное письмо"
-        
+
         with patch.object(main_workflow.auth_steps, 'login_to_hh', return_value=True), \
              patch.object(main_workflow.resume_steps, 'navigate_to_my_resumes', return_value=False):
-            
+
             result = await main_workflow.run_full_workflow(cover_letter)
-            
-            assert result is False
-    
+
+            success, success_count, error_count = result
+            assert success is False
+            assert success_count == 0
+            assert error_count == 0  # Ошибка произошла до начала обработки вакансий
+
     async def test_run_full_workflow_no_applicable_vacancies(self, main_workflow):
         """Тест случая, когда нет подходящих вакансий"""
         cover_letter = "Тестовое сопроводительное письмо"
-        
+
         with patch.object(main_workflow.auth_steps, 'login_to_hh', return_value=True), \
              patch.object(main_workflow.resume_steps, 'navigate_to_my_resumes', return_value=True), \
              patch.object(main_workflow.resume_steps, 'select_first_resume', return_value=True), \
              patch.object(main_workflow.resume_steps, 'go_to_recommended_vacancies', return_value=True), \
              patch.object(main_workflow.vacancy_steps, 'wait_for_vacancies_loaded', return_value=True), \
              patch.object(main_workflow.vacancy_steps, 'get_applicable_vacancies', return_value=[]):
-            
+
             result = await main_workflow.run_full_workflow(cover_letter)
-            
+
             # Должно вернуть True, потому что отсутствие вакансий - это не ошибка
-            assert result is True
-    
+            success, success_count, error_count = result
+            assert success is True
+            assert success_count == 0
+            assert error_count == 0
+
     async def test_run_full_workflow_exception_handling(self, main_workflow):
         """Тест обработки исключения в полном сценарии"""
         cover_letter = "Тестовое сопроводительное письмо"
-        
+
         with patch.object(main_workflow.auth_steps, 'login_to_hh', side_effect=Exception("Test error")):
-            
+
             result = await main_workflow.run_full_workflow(cover_letter)
-            
-            assert result is False
+
+            success, success_count, error_count = result
+            assert success is False
+            assert success_count == 0
+            assert error_count == 1  # Ошибка была обработана и учтена
