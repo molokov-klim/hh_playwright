@@ -21,6 +21,15 @@ def get_browser_options(headless: bool) -> Dict[str, Any]:
         ]
     }
 
+    # В headed режиме добавляем дополнительные аргументы для корректного отображения
+    if not headless:
+        options["args"].extend([
+            "--start-maximized",
+            "--disable-extensions",
+            "--disable-plugins",
+            "--disable-images",  # Ускоряет загрузку страниц
+        ])
+
     return options
 
 
