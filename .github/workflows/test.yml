@@ -26,12 +26,23 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install pytest pytest-mock pytest-asyncio loguru
+        uv pip install pytest pytest-mock pytest-asyncio loguru playwright
+        uv run playwright install chromium
 
     - name: Run unit tests
+      env:
+        HH_LOGIN: ${{ secrets.HH_LOGIN }}
+        HH_PASSWORD: ${{ secrets.HH_PASSWORD }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
         uv run python -m pytest tests/unit -v
 
     - name: Run integration tests
+      env:
+        HH_LOGIN: ${{ secrets.HH_LOGIN }}
+        HH_PASSWORD: ${{ secrets.HH_PASSWORD }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
         uv run python -m pytest tests/integration -v
