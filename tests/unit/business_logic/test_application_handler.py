@@ -30,6 +30,7 @@ class TestApplicationHandler:
         config = Mock(spec=Config)
         config.HH_LOGIN = "test@example.com"
         config.HH_PASSWORD = "password123"
+        config.FAKE = False  # Добавляем атрибут FAKE
         return config
     
     @pytest.fixture
