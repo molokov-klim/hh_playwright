@@ -236,7 +236,9 @@ class TestModuleIntegration:
             async def run_test():
                 # Выполнение полного сценария
                 result = await main_workflow.run_full_workflow()
-                assert result is True
+                # run_full_workflow возвращает кортеж (успех, количество успешных откликов, количество ошибок)
+                success, success_count, error_count = result
+                assert success is True
 
             asyncio.run(run_test())
 
