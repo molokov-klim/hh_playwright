@@ -10,7 +10,7 @@ class Config:
     """Класс для хранения конфигурации приложения"""
     HH_LOGIN: str
     HH_PASSWORD: str
-    HEADLESS: bool = True
+    HEADLESS: bool = False
     VIEWPORT_WIDTH: int = 1920
     VIEWPORT_HEIGHT: int = 1080
     USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
