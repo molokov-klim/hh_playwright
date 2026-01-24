@@ -33,7 +33,7 @@ jobs:
     - name: Install dependencies
       run: |
         source .venv/bin/activate
-        pip install pytest pytest-mock pytest-asyncio loguru playwright
+        pip install pytest pytest-mock pytest-asyncio loguru playwright pytelegrambotapi
         playwright install chromium
 
     - name: Run unit tests
