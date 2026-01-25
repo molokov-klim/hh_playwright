@@ -1,6 +1,6 @@
-from src.step import Step
 from src.config import Config
 from src.logger import logger
+from src.step import Step
 
 
 class HHAuthStep(Step):
@@ -31,7 +31,9 @@ class HHAuthStep(Step):
         # Выбор города
         logger.info("Выбор города Москва")
         await self.page.get_by_role("button", name="Химки (Московская область)").click()
-        await self.page.get_by_role("radio", name="Москва").nth(1).check()
+        logger.info("Выбор города Москва 1")
+        await self.page.get_by_role("radio", name="Москва").nth(1).click()
+        logger.info("Выбор города Москва 2")
 
         # Переход на основной сайт hh.ru
         logger.info("Переход на основной сайт hh.ru")
@@ -68,8 +70,9 @@ class HHAuthStep(Step):
 if __name__ == "__main__":
     # Для запуска HHAuthStep напрямую нужно создать сессию
     import asyncio
-    from src.hh_session import HHSession
+
     from src.config import Config
+    from src.hh_session import HHSession
     from src.logger import logger
 
     async def main():
