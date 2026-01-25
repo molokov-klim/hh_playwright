@@ -208,3 +208,6 @@ __marimo__/
 
 # Debug pages
 debug_pages/
+
+# Temp files
+temp_files/

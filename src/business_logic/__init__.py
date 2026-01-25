@@ -1,3 +1,0 @@
-"""
-Модуль business_logic
-"""
