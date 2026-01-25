@@ -2,7 +2,7 @@ from src.logger import logger
 from src.step import Step
 
 
-class RecommendedVacanciesStep(Step):
+class MoveToRecommendedVacanciesStep(Step):
     """
     Шаг для перехода в рекомендованные вакансии
     """
