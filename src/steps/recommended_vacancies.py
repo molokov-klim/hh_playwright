@@ -26,8 +26,11 @@ class RecommendedVacanciesStep(Step):
         logger.info("Клик по ссылке 'Резюме и профиль'")
         await self.page.get_by_role('link', name='Резюме и профиль').click()
 
-        # Клик по кнопке "вакансии"
+        # Прокрутка до кнопки "вакансии" и клик по ней
+        logger.info("Прокрутка до кнопки 'вакансии'")
+        vacancies_button = self.page.get_by_role('button', name='вакансии')
+        await vacancies_button.scroll_into_view_if_needed()
         logger.info("Клик по кнопке 'вакансии'")
-        await self.page.get_by_role('button', name='вакансии').click()
+        await vacancies_button.click()
 
         logger.info("Шаг перехода в рекомендованные вакансии завершен")
