@@ -52,21 +52,12 @@ class HHAuthStep(Step):
         # Интерактивный ввод SMS-кода
         logger.info("Ожидание ввода SMS-кода пользователем")
 
-        # Сворачиваем окно браузера, если не в headless режиме
-        if not Config.HEADLESS:
-            # Уменьшаем размер окна и перемещаем его за пределы видимости
-            await self.page.set_window_size(100, 100)  # Уменьшаем размер
-            await self.page.set_window_position(-1000, -1000)  # Перемещаем за пределы экрана
-            logger.debug("Окно браузера свернуто (уменьшено и перемещено)")
-
         sms_code = input("Введите SMS-код: ")
         logger.info("SMS-код получен от пользователя")
 
         # Развертываем окно браузера обратно, если не в headless режиме
         if not Config.HEADLESS:
             await self.page.bring_to_front()
-            # Восстанавливаем нормальный размер окна
-            await self.page.set_window_size(1280, 720)  # Восстанавливаем нормальный размер
             logger.debug("Окно браузера развернуто")
 
         # Заполнение поля ввода кода
@@ -90,11 +81,13 @@ if __name__ == "__main__":
     from src.hh_session import HHSession
     from src.logger import logger
 
+
     async def main():
         logger.info("Запуск HHAuthStep напрямую")
         async with HHSession().create_session(headless=Config.HEADLESS) as session:
             auth_step = HHAuthStep(session)
             await auth_step.execute()
         logger.info("Завершение HHAuthStep")
+
 
     asyncio.run(main())

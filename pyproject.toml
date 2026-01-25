@@ -1,6 +1,6 @@
 [project]
 name = "hh-playwright"
-version = "2.1.1"
+version = "2.1.2"
 description = "Автоматизация откликов на hh.ru с использованием Playwright"
 readme = "README.md"
 requires-python = ">=3.13"
