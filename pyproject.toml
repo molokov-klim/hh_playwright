@@ -143,21 +143,33 @@ exclude = [
 [tool.ruff.format]
 preview = true
 
-# ---------- MYPY ----------
-[tool.mypy]
-python_version = "3.13"
-warn_return_any = true
-warn_unused_configs = true
-warn_unused_ignores = true
-disallow_untyped_defs = true
+# ---------- PYRIGHT ----------
+
+[tool.pyright]
+include = ["."]
 exclude = [
-    "build/",
-    "dist/",
-    ".venv/",
-    "venv/",
-    "tests/",
+    "**/__pycache__",
+    ".venv",
+    "build",
+    "dist",
+    "libfptr10.py",
+    "/libfptr10.py",
+    "*/libfptr10.py",
+    "**/libfptr10.py",
     "debug*",
+    "tests",
+    "tests/*",
+    "**/tests",
+    "**/tests/*",
+    "**/test*",
+    "**/test*/*",
+    "**/test*.py",
+    "**/test*/*.py",
 ]
+typeCheckingMode = "strict"
+
+venvPath = "."
+venv = ".venv"
 
 # ---------- PYTEST ----------
 [tool.pytest.ini_options]
