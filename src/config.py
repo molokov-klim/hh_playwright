@@ -4,4 +4,4 @@ class Config:
     BASE_URL = "https://hh.ru/"
     HIMKI_URL = "https://himki.hh.ru/"
     PHONE_NUMBER = "965 444-91-92"
-    MAX_RESPONSE = 10  # Максимальное количество откликов
+    MAX_RESPONSE = 100  # Максимальное количество откликов

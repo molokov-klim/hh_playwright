@@ -1,7 +1,6 @@
 from src.step import Step
 from src.config import Config
 from src.logger import logger
-import re
 
 
 class MassResponsesStep(Step):
@@ -30,8 +29,7 @@ class MassResponsesStep(Step):
             logger.info(f"Обработка страницы {current_page}, текущее количество откликов: {self.response_count}")
 
             # Находим все кнопки "Откликнуться" на текущей странице
-            # Используем более точный селектор, как в оригинальном сценарии
-            response_buttons = self.page.locator('.vacancy-search-item a.HH-MainContent-ResponsiveLink--topFloatBtn:has-text("Откликнуться")')
+            response_buttons = self.page.get_by_role('button', name='Откликнуться')
             count = await response_buttons.count()
 
             if count == 0:
@@ -80,36 +78,28 @@ class MassResponsesStep(Step):
                                 self.response_count += 1
                             else:
                                 # Настоящий отклик
-                                # Получаем ID вакансии из родительского элемента
-                                parent_element = await button.element_handle()
-                                parent_locator = self.page.locator('.vacancy-search-item').nth(i)
-                                vacancy_id = await parent_locator.get_attribute('data-test-vacancy-item-id')
+                                # Сохраняем исходный текст кнопки для проверки результата
+                                original_text = await button.text_content()
 
                                 await button.click()
 
-                                # Ждем появления текста "Вы откликнулись" в пределах родительского элемента
-                                if vacancy_id:
-                                    # Используем ID вакансии для поиска подтверждения
-                                    confirmation_locator = self.page.locator(f'[data-test-vacancy-item-id="{vacancy_id}"]')
-                                    try:
-                                        await confirmation_locator.wait_for(state='visible', timeout=10000)
-                                        await self.page.wait_for_timeout(2000)  # Дополнительное ожидание
+                                # Ждем изменения текста кнопки на "Вы откликнулись"
+                                try:
+                                    # Ждем, пока текст кнопки изменится
+                                    await self.page.wait_for_timeout(3000)  # Небольшая задержка для обработки
 
-                                        # Проверяем, изменился ли текст кнопки на "Вы откликнулись"
-                                        button_text = await button.text_content()
-                                        if "Вы откликнулись" in button_text:
-                                            logger.info(f"Успешно откликнулись на вакансию #{self.response_count + 1}")
-                                            self.response_count += 1
-                                        else:
-                                            logger.warning(f"Не удалось подтвердить отклик на вакансию #{self.response_count + 1}")
-                                            # Продолжаем, даже если не смогли подтвердить отклик
-                                            self.response_count += 1
-                                    except:
+                                    # Проверяем, изменился ли текст кнопки на "Вы откликнулись"
+                                    new_text = await button.text_content()
+                                    if "Вы откликнулись" in new_text or "Отклик отправлен" in new_text:
+                                        logger.info(f"Успешно откликнулись на вакансию #{self.response_count + 1}")
+                                        self.response_count += 1
+                                    else:
                                         logger.warning(f"Не удалось подтвердить отклик на вакансию #{self.response_count + 1}")
                                         # Продолжаем, даже если не смогли подтвердить отклик
                                         self.response_count += 1
-                                else:
-                                    logger.warning(f"Не удалось получить ID вакансии для подтверждения отклика #{self.response_count + 1}")
+                                except:
+                                    logger.warning(f"Не удалось подтвердить отклик на вакансию #{self.response_count + 1}")
+                                    # Продолжаем, даже если не смогли подтвердить отклик
                                     self.response_count += 1
 
                             # Ждем немного между откликами
